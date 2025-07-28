@@ -2,7 +2,7 @@
 
 An LLM-powered system to help freelancers automatically classify their bank transactions as either business expenses or personal expenses using **AWS Bedrock**.
 
-## 🚀 Features
+## Features
 
 - **AWS Bedrock Integration**: Uses Claude 3 Sonnet for intelligent transaction classification
 - **CSV Upload**: Simple CSV upload for bank statement processing
@@ -14,7 +14,7 @@ An LLM-powered system to help freelancers automatically classify their bank tran
 - **RESTful API**: Complete FastAPI backend with comprehensive endpoints
 - **Modern Frontend**: React-based web interface with beautiful UI/UX
 
-## 🏗️ Architecture
+## Architecture
 
 ### Backend (FastAPI + PostgreSQL)
 - **Models**: SQLAlchemy models for users, transactions, and classifications
@@ -36,7 +36,7 @@ An LLM-powered system to help freelancers automatically classify their bank tran
 - **Error Handling**: Robust error handling for API failures
 - **Response Parsing**: Intelligent JSON parsing with fallbacks
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 freelancer_transaction_classifier/
@@ -83,7 +83,7 @@ freelancer_transaction_classifier/
 └── README.md
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -147,7 +147,7 @@ npm start
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -188,7 +188,7 @@ LOG_LEVEL=INFO
 4. **Get Credentials**: Generate access keys for the IAM user
 5. **Update Environment**: Add your AWS credentials to the `.env` file
 
-## 📊 Usage
+## Usage
 
 ### 1. Register/Login
 - Create an account or login to the application
@@ -209,7 +209,7 @@ LOG_LEVEL=INFO
 - Generate business expense reports
 - Create tax-ready reports for specific years
 
-## 🧪 Testing
+## Testing
 
 ### Backend Tests
 ```bash
@@ -226,7 +226,7 @@ cd frontend
 npm test
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Docker Deployment
 ```bash
@@ -255,7 +255,7 @@ docker-compose logs -f
    - Configure auto-scaling
    - Set up CDN for static assets
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -263,18 +263,18 @@ docker-compose logs -f
 4. Add tests for new functionality
 5. Submit a pull request
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+## Support
 
 For support and questions:
 - Create an issue in the repository
 - Check the API documentation at `/docs`
 - Review the troubleshooting section below
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 

@@ -12166,3 +12166,59 @@ botocore.errorfactory.ThrottlingException: An error occurred (ThrottlingExceptio
 2025-08-15 18:35:59,198 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
 2025-08-15 18:36:07,549 - app.services.bedrock_service - INFO - Initializing Bedrock service
 2025-08-15 18:36:07,554 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:39:00,254 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:39:00,268 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:39:25,555 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:39:25,584 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:39:27,397 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:39:27,399 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:39:30,671 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:39:30,672 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:42:01,688 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:42:01,703 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:45:16,156 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:45:16,185 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:45:34,956 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:45:35,001 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:45:54,529 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:45:54,543 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:48:16,974 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:48:16,983 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:48:45,025 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:48:45,045 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:49:03,495 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:49:03,506 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:51:25,960 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:51:25,975 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:53:58,801 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:53:58,809 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:54:01,302 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:54:01,304 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:54:17,205 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:54:17,213 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:54:25,759 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:54:25,761 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:54:26,755 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:54:26,761 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:56:32,704 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:56:32,721 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:56:35,044 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:56:35,046 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:56:36,711 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:56:36,716 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:56:44,301 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:56:44,310 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:58:39,666 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:58:39,682 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:58:44,236 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:58:44,240 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 18:58:49,025 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 18:58:49,039 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 19:09:44,734 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 19:09:44,742 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 19:09:52,824 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 19:09:52,827 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 19:11:16,859 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 19:11:16,881 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 19:12:28,740 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 19:12:28,749 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1

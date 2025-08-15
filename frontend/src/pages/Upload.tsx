@@ -138,32 +138,32 @@ const Upload: React.FC = () => {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Upload Transactions</h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Upload Transactions</h1>
+                <p className="mt-1 text-base text-zinc-500 tracking-tight">
                     Upload a CSV file or PDF bank statement with your transaction data for AI-powered classification
                 </p>
             </div>
 
             {/* Upload Area */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white/80 shadow rounded-lg p-6">
                 <div
                     {...getRootProps()}
                     className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${isDragActive
-                            ? 'border-primary-400 bg-primary-50'
-                            : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+                            ? 'border-brand-400 bg-brand-50'
+                            : 'border-sand-300 hover:border-brand-400 hover:bg-sand-50'
                         }`}
                 >
                     <input {...getInputProps()} />
-                    <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <CloudArrowUpIcon className="mx-auto h-12 w-12 text-brand-400" />
                     <div className="mt-4">
-                        <p className="text-lg font-medium text-gray-900">
+                        <p className="text-xl font-medium text-gray-900 tracking-tight">
                             {isDragActive ? 'Drop the file here' : 'Drag and drop a CSV or PDF file here'}
                         </p>
-                        <p className="mt-2 text-sm text-gray-500">
+                        <p className="mt-2 text-base text-zinc-500 tracking-tight">
                             or click to browse files
                         </p>
                     </div>
-                    <p className="mt-4 text-xs text-gray-400">
+                    <p className="mt-4 text-sm text-zinc-400 tracking-tight">
                         Supported formats: CSV files and PDF bank statements
                     </p>
                 </div>
@@ -171,18 +171,18 @@ const Upload: React.FC = () => {
 
             {/* Upload Progress */}
             {uploading && (
-                <div className="bg-white shadow rounded-lg p-6">
+                <div className="bg-white/80 shadow rounded-lg p-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mr-3"></div>
-                            <p className="text-sm font-medium text-gray-900">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-600 mr-3"></div>
+                            <p className="text-base font-medium text-gray-900 tracking-tight">
                                 Processing your transactions...
                             </p>
                         </div>
                         <button
                             onClick={handleCancelProcessing}
                             disabled={cancelling}
-                            className="inline-flex items-center px-3 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center px-3 py-2 border border-coral-300 rounded-md shadow-sm text-base font-medium text-coral-700 bg-white hover:bg-coral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-tight"
                         >
                             <StopIcon className="h-4 w-4 mr-2" />
                             {cancelling ? 'Stopping...' : 'Stop Processing'}
@@ -193,24 +193,24 @@ const Upload: React.FC = () => {
 
             {/* Upload Results */}
             {uploadResult && (
-                <div className="bg-white shadow rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Results</h3>
+                <div className="bg-white/80 shadow rounded-lg p-6">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4 tracking-tight">Upload Results</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div className="bg-success-50 border border-success-200 rounded-lg p-4">
+                        <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
                             <div className="flex items-center">
-                                <CheckCircleIcon className="h-5 w-5 text-success-600 mr-2" />
-                                <span className="text-sm font-medium text-success-900">
+                                <CheckCircleIcon className="h-5 w-5 text-brand-600 mr-2" />
+                                <span className="text-base font-medium text-brand-900 tracking-tight">
                                     Processed: {uploadResult.processed_count}
                                 </span>
                             </div>
                         </div>
 
                         {uploadResult.errors.length > 0 && (
-                            <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
+                            <div className="bg-coral-50 border border-coral-200 rounded-lg p-4">
                                 <div className="flex items-center">
-                                    <ExclamationTriangleIcon className="h-5 w-5 text-warning-600 mr-2" />
-                                    <span className="text-sm font-medium text-warning-900">
+                                    <ExclamationTriangleIcon className="h-5 w-5 text-coral-600 mr-2" />
+                                    <span className="text-base font-medium text-coral-900 tracking-tight">
                                         Errors: {uploadResult.errors.length}
                                     </span>
                                 </div>
@@ -221,9 +221,9 @@ const Upload: React.FC = () => {
                     {/* Error Details */}
                     {uploadResult.errors.length > 0 && (
                         <div className="mb-6">
-                            <h4 className="text-sm font-medium text-gray-900 mb-2">Errors:</h4>
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                <ul className="text-sm text-red-700 space-y-1">
+                            <h4 className="text-base font-medium text-gray-900 mb-2 tracking-tight">Errors:</h4>
+                            <div className="bg-coral-50 border border-coral-200 rounded-lg p-4">
+                                <ul className="text-base text-coral-700 space-y-1 tracking-tight">
                                     {uploadResult.errors.map((error, index) => (
                                         <li key={index}>• {error}</li>
                                     ))}
@@ -235,12 +235,12 @@ const Upload: React.FC = () => {
                     {/* Sample Transactions */}
                     {uploadResult.transactions.length > 0 && (
                         <div>
-                            <h4 className="text-sm font-medium text-gray-900 mb-2">
+                            <h4 className="text-base font-medium text-gray-900 mb-2 tracking-tight">
                                 Sample Processed Transactions:
                             </h4>
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                <table className="min-w-full divide-y divide-sand-200">
+                                    <thead className="bg-sand-50">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Date
@@ -256,23 +256,23 @@ const Upload: React.FC = () => {
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="bg-white divide-y divide-sand-200">
                                         {uploadResult.transactions.slice(0, 5).map((transaction, index) => (
                                             <tr key={index}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 tracking-tight">
                                                     {transaction.date}
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-900">
+                                                <td className="px-6 py-4 text-base text-gray-900 tracking-tight">
                                                     {transaction.description}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 tracking-tight">
                                                     ${transaction.amount}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span
-                                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.is_business_expense
-                                                                ? 'bg-success-100 text-success-800'
-                                                                : 'bg-gray-100 text-gray-800'
+                                                        className={`inline-flex px-2 py-1 text-sm font-semibold rounded-full tracking-tight ${transaction.is_business_expense
+                                                                ? 'bg-brand-100 text-brand-800'
+                                                                : 'bg-sand-100 text-gray-800'
                                                             }`}
                                                     >
                                                         {transaction.is_business_expense ? 'Business' : 'Personal'}
@@ -289,9 +289,9 @@ const Upload: React.FC = () => {
             )}
 
             {/* Instructions */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h3 className="text-lg font-medium text-blue-900 mb-4">File Format Requirements</h3>
-                <div className="text-sm text-blue-800 space-y-4">
+            <div className="bg-mint-50 border border-mint-200 rounded-lg p-6">
+                <h3 className="text-xl font-semibold text-brand-900 mb-4 tracking-tight">File Format Requirements</h3>
+                <div className="text-base text-brand-800 space-y-4 tracking-tight">
                     <div>
                         <h4 className="font-medium">CSV Files:</h4>
                         <p>Your CSV file should contain the following columns:</p>

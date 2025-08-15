@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 import { Statistics } from '../types/api';
@@ -49,26 +50,26 @@ const Dashboard: React.FC = () => {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+                <p className="mt-1 text-base text-zinc-500 tracking-tight">
                     Welcome back, {user?.business_name || user?.email}
                 </p>
             </div>
 
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white/80 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <DocumentTextIcon className="h-6 w-6 text-gray-400" />
+                                <DocumentTextIcon className="h-6 w-6 text-brand-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-base font-medium text-zinc-500 truncate tracking-tight">
                                         Total Transactions
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-xl font-semibold text-gray-900 tracking-tight">
                                         {statistics?.total_transactions || 0}
                                     </dd>
                                 </dl>
@@ -77,18 +78,18 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white/80 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <BanknotesIcon className="h-6 w-6 text-primary-400" />
+                                <BanknotesIcon className="h-6 w-6 text-brand-500" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-base font-medium text-zinc-500 truncate tracking-tight">
                                         Business Transactions
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-xl font-semibold text-gray-900 tracking-tight">
                                         {statistics?.business_transactions || 0}
                                     </dd>
                                 </dl>
@@ -97,18 +98,18 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white/80 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <ChartBarIcon className="h-6 w-6 text-success-400" />
+                                <ChartBarIcon className="h-6 w-6 text-mint-500" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-base font-medium text-zinc-500 truncate tracking-tight">
                                         Total Amount
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-xl font-semibold text-gray-900 tracking-tight">
                                         ${statistics?.total_amount?.toFixed(2) || '0.00'}
                                     </dd>
                                 </dl>
@@ -117,18 +118,18 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white/80 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <CloudArrowUpIcon className="h-6 w-6 text-warning-400" />
+                                <CloudArrowUpIcon className="h-6 w-6 text-coral-500" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-base font-medium text-zinc-500 truncate tracking-tight">
                                         Business Amount
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-xl font-semibold text-gray-900 tracking-tight">
                                         ${statistics?.business_amount?.toFixed(2) || '0.00'}
                                     </dd>
                                 </dl>
@@ -141,8 +142,8 @@ const Dashboard: React.FC = () => {
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Pie Chart */}
-                <div className="bg-white shadow rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                <div className="bg-white/80 shadow rounded-lg p-6">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4 tracking-tight">
                         Transaction Distribution
                     </h3>
                     <div className="h-64">
@@ -169,8 +170,8 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Bar Chart */}
-                <div className="bg-white shadow rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                <div className="bg-white/80 shadow rounded-lg p-6">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4 tracking-tight">
                         Monthly Breakdown
                     </h3>
                     <div className="h-64">
@@ -190,50 +191,50 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+            <div className="bg-white/80 shadow rounded-lg p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4 tracking-tight">Quick Actions</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <a
-                        href="/upload"
-                        className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500"
+                    <Link
+                        to="/upload"
+                        className="relative rounded-lg border border-sand-200 bg-white/60 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-brand-200 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-brand-500"
                     >
                         <div className="flex-shrink-0">
-                            <CloudArrowUpIcon className="h-6 w-6 text-primary-600" />
+                            <CloudArrowUpIcon className="h-6 w-6 text-brand-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <span className="absolute inset-0" aria-hidden="true" />
-                            <p className="text-sm font-medium text-gray-900">Upload Transactions</p>
-                            <p className="text-sm text-gray-500">Import CSV file</p>
+                            <p className="text-base font-medium text-gray-900 tracking-tight">Upload Transactions</p>
+                            <p className="text-base text-zinc-500 tracking-tight">Import CSV file</p>
                         </div>
-                    </a>
+                    </Link>
 
-                    <a
-                        href="/transactions"
-                        className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500"
+                    <Link
+                        to="/transactions"
+                        className="relative rounded-lg border border-sand-200 bg-white/60 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-brand-200 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-brand-500"
                     >
                         <div className="flex-shrink-0">
-                            <DocumentTextIcon className="h-6 w-6 text-primary-600" />
+                            <DocumentTextIcon className="h-6 w-6 text-brand-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <span className="absolute inset-0" aria-hidden="true" />
-                            <p className="text-sm font-medium text-gray-900">View Transactions</p>
-                            <p className="text-sm text-gray-500">Browse all transactions</p>
+                            <p className="text-base font-medium text-gray-900 tracking-tight">View Transactions</p>
+                            <p className="text-base text-zinc-500 tracking-tight">Browse all transactions</p>
                         </div>
-                    </a>
+                    </Link>
 
-                    <a
-                        href="/reports"
-                        className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500"
+                    <Link
+                        to="/reports"
+                        className="relative rounded-lg border border-sand-200 bg-white/60 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-brand-200 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-brand-500"
                     >
                         <div className="flex-shrink-0">
-                            <ChartBarIcon className="h-6 w-6 text-primary-600" />
+                            <ChartBarIcon className="h-6 w-6 text-brand-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <span className="absolute inset-0" aria-hidden="true" />
-                            <p className="text-sm font-medium text-gray-900">Generate Reports</p>
-                            <p className="text-sm text-gray-500">Export data</p>
+                            <p className="text-base font-medium text-gray-900 tracking-tight">Generate Reports</p>
+                            <p className="text-base text-zinc-500 tracking-tight">Export data</p>
                         </div>
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>

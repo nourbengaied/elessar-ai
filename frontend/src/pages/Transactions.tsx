@@ -98,8 +98,8 @@ const Transactions: React.FC = () => {
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Transactions</h1>
+                    <p className="mt-1 text-base text-zinc-500 tracking-tight">
                         View and manage your transaction classifications
                     </p>
                 </div>
@@ -107,7 +107,7 @@ const Transactions: React.FC = () => {
                 {transactions.length > 0 && (
                     <button
                         onClick={handleClearAllTransactions}
-                        className="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                        className="inline-flex items-center px-4 py-2 border border-coral-300 rounded-md shadow-sm text-base font-medium text-coral-700 bg-white hover:bg-coral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral-500 transition-colors tracking-tight"
                     >
                         <TrashIcon className="h-4 w-4 mr-2" />
                         Clear All
@@ -116,29 +116,29 @@ const Transactions: React.FC = () => {
             </div>
 
             {/* Filters */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white/80 shadow rounded-lg p-6">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <div className="flex-1">
-                        <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="search" className="block text-base font-medium text-gray-700 mb-1 tracking-tight">
                             Search
                         </label>
                         <input
                             type="text"
                             id="search"
                             placeholder="Search transactions..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                            className="w-full px-3 py-2 border border-sand-200 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 text-base tracking-tight"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="filter" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="filter" className="block text-base font-medium text-gray-700 mb-1 tracking-tight">
                             Filter
                         </label>
                         <select
                             id="filter"
-                            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                            className="px-3 py-2 border border-sand-200 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 text-base tracking-tight"
                             value={filter}
                             onChange={(e) => setFilter(e.target.value as 'all' | 'business' | 'personal')}
                         >
@@ -151,16 +151,16 @@ const Transactions: React.FC = () => {
             </div>
 
             {/* Transactions Table */}
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">
+            <div className="bg-white/80 shadow rounded-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-sand-200">
+                    <h3 className="text-xl font-semibold text-gray-900 tracking-tight">
                         {filteredTransactions.length} transactions found
                     </h3>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-sand-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Date
@@ -185,28 +185,28 @@ const Transactions: React.FC = () => {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white divide-y divide-sand-200">
                             {filteredTransactions.map((transaction) => (
-                                <tr key={transaction.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <tr key={transaction.id} className="hover:bg-sand-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 tracking-tight">
                                         {new Date(transaction.date).toLocaleDateString()}
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-900">
+                                    <td className="px-6 py-4 text-base text-gray-900 tracking-tight">
                                         {transaction.description}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <span className={transaction.amount >= 0 ? 'text-success-600' : 'text-danger-600'}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 tracking-tight">
+                                        <span className={transaction.amount >= 0 ? 'text-brand-600' : 'text-coral-600'}>
                                             ${Math.abs(transaction.amount).toFixed(2)}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-base text-zinc-500 tracking-tight">
                                         {transaction.category || '-'}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <select
-                                            className={`text-xs font-semibold rounded-full px-2 py-1 border ${transaction.is_business_expense
-                                                    ? 'bg-success-100 text-success-800 border-success-200'
-                                                    : 'bg-gray-100 text-gray-800 border-gray-200'
+                                            className={`text-sm font-semibold rounded-full px-2 py-1 border tracking-tight ${transaction.is_business_expense
+                                                    ? 'bg-brand-100 text-brand-800 border-brand-200'
+                                                    : 'bg-sand-100 text-gray-800 border-sand-200'
                                                 }`}
                                             value={transaction.is_business_expense ? 'business' : 'personal'}
                                             onChange={(e) => handleClassificationChange(transaction.id, e.target.value === 'business')}
@@ -215,13 +215,13 @@ const Transactions: React.FC = () => {
                                             <option value="personal">Personal</option>
                                         </select>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-base text-zinc-500 tracking-tight">
                                         {transaction.confidence_score ? (
-                                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.confidence_score > 0.8
-                                                    ? 'bg-success-100 text-success-800'
+                                            <span className={`inline-flex px-2 py-1 text-sm font-semibold rounded-full tracking-tight ${transaction.confidence_score > 0.8
+                                                    ? 'bg-brand-100 text-brand-800'
                                                     : transaction.confidence_score > 0.6
-                                                        ? 'bg-warning-100 text-warning-800'
-                                                        : 'bg-danger-100 text-danger-800'
+                                                        ? 'bg-mint-100 text-mint-800'
+                                                        : 'bg-coral-100 text-coral-800'
                                                 }`}>
                                                 {(transaction.confidence_score * 100).toFixed(0)}%
                                             </span>
@@ -229,11 +229,11 @@ const Transactions: React.FC = () => {
                                             '-'
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <td className="px-6 py-4 whitespace-nowrap text-base font-medium">
                                         <div className="flex space-x-2">
                                             <button
                                                 onClick={() => handleDeleteTransaction(transaction.id)}
-                                                className="text-danger-600 hover:text-danger-900"
+                                                className="text-coral-600 hover:text-coral-900"
                                                 title="Delete transaction"
                                             >
                                                 <TrashIcon className="h-4 w-4" />

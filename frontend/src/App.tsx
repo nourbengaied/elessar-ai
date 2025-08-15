@@ -19,7 +19,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
             </div>
         );
     }
@@ -31,24 +31,19 @@ const App: React.FC = () => {
     return (
         <AuthProvider>
             <Router>
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-sand-400">
                     <Toaster position="top-right" />
                     <Routes>
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route
-                            path="/"
+                            path="/*"
                             element={
                                 <PrivateRoute>
                                     <Layout />
                                 </PrivateRoute>
                             }
-                        >
-                            <Route index element={<Dashboard />} />
-                            <Route path="transactions" element={<Transactions />} />
-                            <Route path="upload" element={<Upload />} />
-                            <Route path="reports" element={<Reports />} />
-                        </Route>
+                        />
                     </Routes>
                 </div>
             </Router>

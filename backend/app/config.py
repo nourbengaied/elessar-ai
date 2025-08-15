@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     
     # File upload
     max_file_size: int = 10 * 1024 * 1024  # 10MB
-    allowed_file_types: List[str] = [".csv"]
+    allowed_file_types: List[str] = [".csv", ".pdf"]
     
     # CORS
     allowed_origins: List[str] = ["http://localhost:3000"]

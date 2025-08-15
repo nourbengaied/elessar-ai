@@ -1,12 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import io
+import logging
+from datetime import datetime
 from ..database import get_db
 from ..services.bedrock_service import BedrockService
 from ..services.transaction_service import TransactionService
 from ..utils.security import get_current_user
 from ..utils.validators import validate_file_size, validate_file_type
 from ..config import settings
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -17,41 +23,81 @@ async def upload_transactions(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Upload and process CSV file with transactions
+    Upload and process CSV or PDF file with transactions
     """
-    # Validate file type
-    if not validate_file_type(file.filename, settings.allowed_file_types):
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Only {', '.join(settings.allowed_file_types)} files are supported"
-        )
+    upload_id = f"upload_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{current_user['sub'][:8]}"
     
-    # Validate file size
-    content = await file.read()
-    if not validate_file_size(len(content), settings.max_file_size):
-        raise HTTPException(
-            status_code=400, 
-            detail=f"File size exceeds maximum allowed size of {settings.max_file_size} bytes"
-        )
+    logger.info(f"[{upload_id}] Starting file upload - User: {current_user['sub']}, File: {file.filename}, Size: {file.size} bytes")
     
     try:
-        csv_content = content.decode('utf-8')
+        # Validate file type
+        logger.info(f"[{upload_id}] Validating file type: {file.filename}")
+        if not validate_file_type(file.filename, settings.allowed_file_types):
+            logger.warning(f"[{upload_id}] File type validation failed - File: {file.filename}, Allowed: {settings.allowed_file_types}")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Only {', '.join(settings.allowed_file_types)} files are supported"
+            )
+        logger.info(f"[{upload_id}] File type validation passed")
+        
+        # Validate file size
+        logger.info(f"[{upload_id}] Reading file content for size validation")
+        content = await file.read()
+        logger.info(f"[{upload_id}] File content read - Size: {len(content)} bytes")
+        
+        if not validate_file_size(len(content), settings.max_file_size):
+            logger.warning(f"[{upload_id}] File size validation failed - Size: {len(content)} bytes, Max: {settings.max_file_size} bytes")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"File size exceeds maximum allowed size of {settings.max_file_size} bytes"
+            )
+        logger.info(f"[{upload_id}] File size validation passed")
         
         # Initialize services
+        logger.info(f"[{upload_id}] Initializing services")
         bedrock_service = BedrockService()
         transaction_service = TransactionService(db, bedrock_service)
+        logger.info(f"[{upload_id}] Services initialized successfully")
         
-        # Process CSV
-        result = transaction_service.process_csv_upload(csv_content, current_user["sub"])
+        # Determine file type and process accordingly
+        file_extension = file.filename.lower().split('.')[-1] if '.' in file.filename else ''
+        logger.info(f"[{upload_id}] Processing file with extension: {file_extension}")
+        
+        start_time = datetime.now()
+        
+        if file_extension == 'csv':
+            # Process CSV file
+            logger.info(f"[{upload_id}] Processing CSV file")
+            csv_content = content.decode('utf-8')
+            logger.info(f"[{upload_id}] CSV content decoded - Length: {len(csv_content)} characters")
+            result = transaction_service.process_csv_upload(csv_content, current_user["sub"])
+            logger.info(f"[{upload_id}] CSV processing completed - Result: {result}")
+        elif file_extension == 'pdf':
+            # Process PDF file
+            logger.info(f"[{upload_id}] Processing PDF file")
+            result = transaction_service.process_pdf_upload(content, current_user["sub"])
+            logger.info(f"[{upload_id}] PDF processing completed - Result: {result}")
+        else:
+            logger.error(f"[{upload_id}] Unsupported file type: {file_extension}")
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+        
+        processing_time = (datetime.now() - start_time).total_seconds()
+        logger.info(f"[{upload_id}] File processing completed successfully - Processing time: {processing_time:.2f}s, Transactions processed: {result.get('processed_count', 0)}")
         
         return {
             "message": f"Successfully processed {result['processed_count']} transactions",
             "processed_count": result['processed_count'],
             "errors": result['errors'],
-            "transactions": result['transactions']
+            "transactions": result['transactions'],
+            "upload_id": upload_id,
+            "processing_time": processing_time
         }
         
+    except HTTPException:
+        # Re-raise HTTP exceptions without logging (they're expected)
+        raise
     except Exception as e:
+        logger.error(f"[{upload_id}] Unexpected error during file upload: {str(e)}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/")

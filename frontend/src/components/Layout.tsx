@@ -5,6 +5,7 @@ import Dashboard from '../pages/Dashboard';
 import Transactions from '../pages/Transactions';
 import Upload from '../pages/Upload';
 import Reports from '../pages/Reports';
+import Logo from './Logo';
 import {
     HomeIcon,
     DocumentTextIcon,
@@ -55,11 +56,7 @@ const Layout: React.FC = () => {
                 <div className="bg-white/90 backdrop-blur-sm shadow-lg rounded-full px-6 py-3 border border-sand-200">
                     <div className="flex items-center space-x-8">
                         {/* Logo */}
-                        <div className="flex items-center">
-                            <h1 className="text-lg font-bold text-brand-500 tracking-tight font-neo">
-                                Transaction Classifier
-                            </h1>
-                        </div>
+                        <Logo size={36} />
 
                         {/* Navigation */}
                         <nav className="flex items-center space-x-1">

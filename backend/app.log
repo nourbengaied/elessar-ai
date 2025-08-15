@@ -12222,3 +12222,7 @@ botocore.errorfactory.ThrottlingException: An error occurred (ThrottlingExceptio
 2025-08-15 19:11:16,881 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
 2025-08-15 19:12:28,740 - app.services.bedrock_service - INFO - Initializing Bedrock service
 2025-08-15 19:12:28,749 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 19:46:32,358 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 19:46:32,370 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1
+2025-08-15 20:08:20,493 - app.services.bedrock_service - INFO - Initializing Bedrock service
+2025-08-15 20:08:20,512 - app.services.bedrock_service - INFO - Bedrock service initialized successfully - Model: anthropic.claude-3-sonnet-20240229-v1:0, Region: us-east-1

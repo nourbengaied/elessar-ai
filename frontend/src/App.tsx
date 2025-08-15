@@ -9,9 +9,6 @@ import Transactions from './pages/Transactions';
 import Upload from './pages/Upload';
 import Reports from './pages/Reports';
 import Layout from './components/Layout';
-import DebugAuth from './components/DebugAuth';
-import BackendStatus from './components/BackendStatus';
-import AuthTest from './components/AuthTest';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
@@ -53,9 +50,6 @@ const App: React.FC = () => {
                             <Route path="reports" element={<Reports />} />
                         </Route>
                     </Routes>
-                    <DebugAuth />
-                    <BackendStatus />
-                    <AuthTest />
                 </div>
             </Router>
         </AuthProvider>

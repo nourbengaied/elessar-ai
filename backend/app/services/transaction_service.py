@@ -8,6 +8,7 @@ from datetime import datetime
 import PyPDF2
 import io
 import logging
+import os
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -16,6 +17,11 @@ class TransactionService:
     def __init__(self, db: Session, bedrock_service: BedrockService):
         self.db = db
         self.bedrock_service = bedrock_service
+    
+    def _check_cancellation(self, user_id: str) -> bool:
+        """Check if processing has been cancelled for the user"""
+        cancellation_file = f"/tmp/cancel_{user_id}"
+        return os.path.exists(cancellation_file)
     
     def process_csv_upload(self, file_content: str, user_id: str) -> Dict[str, Any]:
         """
@@ -43,6 +49,11 @@ class TransactionService:
             
             logger.info(f"Processing {len(df)} rows of transaction data")
             for index, row in df.iterrows():
+                # Check for cancellation on every row for instant response
+                if self._check_cancellation(user_id):
+                    logger.info(f"Processing cancelled at row {index + 1}")
+                    raise ValueError("Processing cancelled by user")
+                
                 try:
                     logger.debug(f"Processing row {index + 1}: {row.to_dict()}")
                     
@@ -57,9 +68,14 @@ class TransactionService:
                     
                     logger.debug(f"Transaction data prepared: {transaction_data}")
                     
+                    # Check for cancellation before Bedrock API call (most time-consuming operation)
+                    if self._check_cancellation(user_id):
+                        logger.info(f"Processing cancelled before Bedrock classification at row {index + 1}")
+                        raise ValueError("Processing cancelled by user")
+                    
                     # Classify transaction using Bedrock
                     logger.debug(f"Classifying transaction {index + 1} with Bedrock")
-                    classification = self.bedrock_service.classify_transaction(transaction_data)
+                    classification = self.bedrock_service.classify_transaction(transaction_data, user_id)
                     logger.debug(f"Classification result: {classification}")
                     
                     # Create transaction record
@@ -135,11 +151,13 @@ class TransactionService:
         
         try:
             logger.info("Extracting text from PDF")
+            # extract text from pdf
             pdf_text = self._extract_text_from_pdf(file_content)
             logger.info(f"PDF text extracted - Length: {len(pdf_text)} characters")
             
             logger.info("Extracting transactions from PDF text using Bedrock")
-            extracted_transactions = self.bedrock_service.extract_transactions_from_pdf(pdf_text)
+            # extract transactions from pdf text
+            extracted_transactions = self.bedrock_service.extract_transactions_from_pdf(pdf_text, user_id)
             logger.info(f"Transactions extracted from PDF: {len(extracted_transactions)} found")
             
             processed_transactions = []
@@ -147,6 +165,11 @@ class TransactionService:
             
             logger.info("Processing extracted transactions")
             for index, transaction_data in enumerate(extracted_transactions):
+                # Check for cancellation on every transaction for instant response
+                if self._check_cancellation(user_id):
+                    logger.info(f"Processing cancelled at transaction {index + 1}")
+                    raise ValueError("Processing cancelled by user")
+                
                 try:
                     logger.debug(f"Processing extracted transaction {index + 1}: {transaction_data}")
                     
@@ -157,9 +180,14 @@ class TransactionService:
                         errors.append(f"Transaction {index + 1}: Missing required fields {missing}")
                         continue
                     
+                    # Check for cancellation before Bedrock API call (most time-consuming operation)
+                    if self._check_cancellation(user_id):
+                        logger.info(f"Processing cancelled before Bedrock classification at transaction {index + 1}")
+                        raise ValueError("Processing cancelled by user")
+                    
                     # Classify transaction using Bedrock
                     logger.debug(f"Classifying extracted transaction {index + 1}")
-                    classification = self.bedrock_service.classify_transaction(transaction_data)
+                    classification = self.bedrock_service.classify_transaction(transaction_data, user_id)
                     logger.debug(f"Classification result: {classification}")
                     
                     # Create transaction record

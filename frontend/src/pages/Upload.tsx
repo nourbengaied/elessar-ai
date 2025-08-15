@@ -5,32 +5,69 @@ import { UploadResult } from '../types/api';
 import toast from 'react-hot-toast';
 import {
     CloudArrowUpIcon,
-    DocumentTextIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
+    StopIcon,
 } from '@heroicons/react/24/outline';
 
 const Upload: React.FC = () => {
     const [uploading, setUploading] = useState(false);
     const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+    const [cancelling, setCancelling] = useState(false);
+
+    const handleCancelProcessing = async () => {
+        if (!window.confirm('Are you sure you want to stop the transaction processing? This action cannot be undone.')) {
+            return;
+        }
+
+        setCancelling(true);
+        try {
+            await api.post('/api/v1/transactions/cancel-processing');
+            toast.success('Processing cancellation requested');
+            setUploading(false);
+            setUploadResult(null);
+        } catch (error: any) {
+            toast.error('Failed to cancel processing');
+            console.error('Cancel processing error:', error);
+        } finally {
+            setCancelling(false);
+        }
+    };
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         if (acceptedFiles.length === 0) return;
 
         const file = acceptedFiles[0];
+        const fileExtension = file.name.toLowerCase().split('.').pop();
+        const uploadId = `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        console.log(`[${uploadId}] Starting file upload process`);
+        console.log(`[${uploadId}] File details:`, {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            extension: fileExtension,
+            lastModified: new Date(file.lastModified).toISOString()
+        });
 
         // Validate file type
-        if (!file.name.toLowerCase().endsWith('.csv')) {
-            toast.error('Please upload a CSV file');
+        if (!['csv', 'pdf'].includes(fileExtension || '')) {
+            console.warn(`[${uploadId}] File type validation failed - Extension: ${fileExtension}`);
+            toast.error('Please upload a CSV or PDF file');
             return;
         }
 
+        console.log(`[${uploadId}] File type validation passed`);
         setUploading(true);
         setUploadResult(null);
 
         try {
+            console.log(`[${uploadId}] Preparing form data for upload`);
             const formData = new FormData();
             formData.append('file', file);
+
+            console.log(`[${uploadId}] Making API request to /api/v1/transactions/upload`);
+            const startTime = Date.now();
 
             const response = await api.post<UploadResult>('/api/v1/transactions/upload', formData, {
                 headers: {
@@ -38,12 +75,44 @@ const Upload: React.FC = () => {
                 },
             });
 
+            const endTime = Date.now();
+            const processingTime = endTime - startTime;
+
+            console.log(`[${uploadId}] API response received successfully:`, {
+                status: response.status,
+                data: response.data,
+                processingTime: `${processingTime}ms`
+            });
+
             setUploadResult(response.data);
             toast.success(`Successfully processed ${response.data.processed_count} transactions`);
+            
+            console.log(`[${uploadId}] Upload completed successfully - Transactions processed: ${response.data.processed_count}`);
+            
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Upload failed');
+            const errorDetails = {
+                message: error.message,
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                data: error.response?.data,
+                config: {
+                    url: error.config?.url,
+                    method: error.config?.method,
+                    headers: error.config?.headers
+                }
+            };
+            
+            console.error(`[${uploadId}] Upload failed:`, errorDetails);
+            
+            // Handle cancellation specifically
+            if (error.response?.status === 499) {
+                toast.success('Processing was cancelled successfully');
+            } else {
+                toast.error(error.response?.data?.detail || 'Upload failed');
+            }
         } finally {
             setUploading(false);
+            console.log(`[${uploadId}] Upload process completed`);
         }
     }, []);
 
@@ -51,8 +120,18 @@ const Upload: React.FC = () => {
         onDrop,
         accept: {
             'text/csv': ['.csv'],
+            'application/pdf': ['.pdf'],
         },
         multiple: false,
+        onDropAccepted: (files) => {
+            console.log('Files accepted by dropzone:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
+        },
+        onDropRejected: (fileRejections) => {
+            console.warn('Files rejected by dropzone:', fileRejections.map(fr => ({
+                file: fr.file.name,
+                errors: fr.errors.map(e => ({ code: e.code, message: e.message }))
+            })));
+        }
     });
 
     return (
@@ -61,7 +140,7 @@ const Upload: React.FC = () => {
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Upload Transactions</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Upload a CSV file with your transaction data for AI-powered classification
+                    Upload a CSV file or PDF bank statement with your transaction data for AI-powered classification
                 </p>
             </div>
 
@@ -78,14 +157,14 @@ const Upload: React.FC = () => {
                     <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
                     <div className="mt-4">
                         <p className="text-lg font-medium text-gray-900">
-                            {isDragActive ? 'Drop the CSV file here' : 'Drag and drop a CSV file here'}
+                            {isDragActive ? 'Drop the file here' : 'Drag and drop a CSV or PDF file here'}
                         </p>
                         <p className="mt-2 text-sm text-gray-500">
                             or click to browse files
                         </p>
                     </div>
                     <p className="mt-4 text-xs text-gray-400">
-                        Supported format: CSV files only
+                        Supported formats: CSV files and PDF bank statements
                     </p>
                 </div>
             </div>
@@ -93,11 +172,21 @@ const Upload: React.FC = () => {
             {/* Upload Progress */}
             {uploading && (
                 <div className="bg-white shadow rounded-lg p-6">
-                    <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mr-3"></div>
-                        <p className="text-sm font-medium text-gray-900">
-                            Processing your transactions...
-                        </p>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mr-3"></div>
+                            <p className="text-sm font-medium text-gray-900">
+                                Processing your transactions...
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleCancelProcessing}
+                            disabled={cancelling}
+                            className="inline-flex items-center px-3 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <StopIcon className="h-4 w-4 mr-2" />
+                            {cancelling ? 'Stopping...' : 'Stop Processing'}
+                        </button>
                     </div>
                 </div>
             )}
@@ -181,12 +270,12 @@ const Upload: React.FC = () => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span
-                                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.is_business
+                                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.is_business_expense
                                                                 ? 'bg-success-100 text-success-800'
                                                                 : 'bg-gray-100 text-gray-800'
                                                             }`}
                                                     >
-                                                        {transaction.is_business ? 'Business' : 'Personal'}
+                                                        {transaction.is_business_expense ? 'Business' : 'Personal'}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -201,21 +290,34 @@ const Upload: React.FC = () => {
 
             {/* Instructions */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h3 className="text-lg font-medium text-blue-900 mb-4">CSV Format Requirements</h3>
-                <div className="text-sm text-blue-800 space-y-2">
-                    <p>Your CSV file should contain the following columns:</p>
-                    <ul className="list-disc list-inside space-y-1 ml-4">
-                        <li><strong>date</strong> - Transaction date (YYYY-MM-DD format)</li>
-                        <li><strong>description</strong> - Transaction description</li>
-                        <li><strong>amount</strong> - Transaction amount (positive for income, negative for expenses)</li>
-                        <li><strong>category</strong> - Optional category field</li>
-                    </ul>
-                    <p className="mt-4">
-                        <strong>Example:</strong><br />
-                        date,description,amount,category<br />
-                        2024-01-15,Client Payment,1500.00,Income<br />
-                        2024-01-16,Office Supplies,-45.50,Expenses
-                    </p>
+                <h3 className="text-lg font-medium text-blue-900 mb-4">File Format Requirements</h3>
+                <div className="text-sm text-blue-800 space-y-4">
+                    <div>
+                        <h4 className="font-medium">CSV Files:</h4>
+                        <p>Your CSV file should contain the following columns:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-4 mt-2">
+                            <li><strong>date</strong> - Transaction date (YYYY-MM-DD format)</li>
+                            <li><strong>description</strong> - Transaction description</li>
+                            <li><strong>amount</strong> - Transaction amount (positive for income, negative for expenses)</li>
+                            <li><strong>category</strong> - Optional category field</li>
+                        </ul>
+                        <p className="mt-2">
+                            <strong>Example:</strong><br />
+                            date,description,amount,category<br />
+                            2024-01-15,Client Payment,1500.00,Income<br />
+                            2024-01-16,Office Supplies,-45.50,Expenses
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 className="font-medium">PDF Bank Statements:</h4>
+                        <p>Upload your bank statement PDF and our AI will extract and classify the transactions automatically. The system works best with:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-4 mt-2">
+                            <li>Standard bank statement formats</li>
+                            <li>Clear transaction descriptions</li>
+                            <li>Well-formatted dates and amounts</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

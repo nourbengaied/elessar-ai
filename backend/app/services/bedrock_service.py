@@ -3,6 +3,7 @@ import json
 from typing import Dict, Any, List
 import logging
 from datetime import datetime
+import os
 from ..config import settings
 
 # Configure logging
@@ -24,13 +25,23 @@ class BedrockService:
             logger.error(f"Failed to initialize Bedrock service: {str(e)}", exc_info=True)
             raise
     
-    def classify_transaction(self, transaction_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_cancellation(self, user_id: str) -> bool:
+        """Check if processing has been cancelled for the user"""
+        cancellation_file = f"/tmp/cancel_{user_id}"
+        return os.path.exists(cancellation_file)
+    
+    def classify_transaction(self, transaction_data: Dict[str, Any], user_id: str = None) -> Dict[str, Any]:
         """
         Classify a transaction using AWS Bedrock Claude
         """
         request_id = f"classify_{datetime.now().strftime('%H%M%S%f')[:-3]}"
-        logger.info(f"[{request_id}] Starting transaction classification - Data: {transaction_data}")
+        # logger.info(f"[{request_id}] Starting transaction classification - Data: {transaction_data}")
         start_time = datetime.now()
+        
+        # Check for cancellation before starting classification
+        if user_id and self._check_cancellation(user_id):
+            logger.info(f"[{request_id}] Classification cancelled by user request")
+            raise ValueError("Processing cancelled by user")
         
         prompt = self._build_classification_prompt(transaction_data)
         logger.debug(f"[{request_id}] Classification prompt built - Length: {len(prompt)} characters")
@@ -40,7 +51,7 @@ class BedrockService:
             # Prepare the request body for Claude
             request_body = {
                 "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 500,  # Increased from 200 to 500
+                "max_tokens": 4096, 
                 "temperature": 0.1,
                 "messages": [
                     {
@@ -72,8 +83,8 @@ class BedrockService:
             result = self._parse_llm_response(content)
             processing_time = (datetime.now() - start_time).total_seconds()
             
-            logger.info(f"[{request_id}] Classification completed successfully - Result: {result}, Time: {processing_time:.3f}s")
-            logger.info(f"[{request_id}] Parsed result: {json.dumps(result, indent=2)}")
+            # logger.info(f"[{request_id}] Classification completed successfully - Result: {result}, Time: {processing_time:.3f}s")
+            # logger.info(f"[{request_id}] Parsed result: {json.dumps(result, indent=2)}")
             return result
             
         except Exception as e:
@@ -86,13 +97,18 @@ class BedrockService:
                 "category": "unknown"
             }
     
-    def extract_transactions_from_pdf(self, pdf_text: str) -> List[Dict[str, Any]]:
+    def extract_transactions_from_pdf(self, pdf_text: str, user_id: str = None) -> List[Dict[str, Any]]:
         """
         Extract transactions from PDF bank statement text using AWS Bedrock Claude
         """
         request_id = f"extract_{datetime.now().strftime('%H%M%S%f')[:-3]}"
         logger.info(f"[{request_id}] Starting PDF transaction extraction - Text length: {len(pdf_text)} characters")
         start_time = datetime.now()
+        
+        # Check for cancellation before starting extraction
+        if user_id and self._check_cancellation(user_id):
+            logger.info(f"[{request_id}] PDF extraction cancelled by user request")
+            raise ValueError("Processing cancelled by user")
         
         prompt = self._build_pdf_extraction_prompt(pdf_text)
         logger.debug(f"[{request_id}] PDF extraction prompt built - Length: {len(prompt)} characters")
@@ -102,7 +118,7 @@ class BedrockService:
             # Prepare the request body for Claude
             request_body = {
                 "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 2000,  # Increased from 1000 to 2000 for longer responses
+                "max_tokens": 4096, 
                 "temperature": 0.1,
                 "messages": [
                     {
@@ -244,51 +260,21 @@ Follow the examples above exactly."""
     def _parse_llm_response(self, response: str) -> Dict[str, Any]:
         logger.debug(f"Parsing LLM response: {response}")
         try:
-            # Try multiple JSON extraction strategies
-            result = None
-            
-            # Strategy 1: Look for JSON object with braces
+            # Extract JSON from response
             json_start = response.find('{')
             json_end = response.rfind('}') + 1
             
-            if json_start != -1 and json_end > json_start:
-                try:
-                    json_str = response[json_start:json_end]
-                    logger.debug(f"Strategy 1 - Extracted JSON string: {json_str}")
-                    result = json.loads(json_str)
-                    logger.info(f"Strategy 1 successful - Parsed JSON: {result}")
-                except json.JSONDecodeError as e:
-                    logger.warning(f"Strategy 1 failed - JSON decode error: {e}")
-                    result = None
+            if json_start == -1 or json_end == 0:
+                logger.warning("No JSON found in response")
+                raise ValueError("No JSON found in response")
             
-            # Strategy 2: Look for JSON object with quotes and braces (more flexible)
-            if result is None:
-                # Find the first occurrence of a pattern that looks like JSON
-                import re
-                json_pattern = r'\{[^{}]*"[^"]*"[^{}]*\}'
-                matches = re.findall(json_pattern, response)
-                if matches:
-                    try:
-                        json_str = matches[0]
-                        logger.debug(f"Strategy 2 - Extracted JSON string: {json_str}")
-                        result = json.loads(json_str)
-                        logger.info(f"Strategy 2 successful - Parsed JSON: {result}")
-                    except json.JSONDecodeError as e:
-                        logger.warning(f"Strategy 2 failed - JSON decode error: {e}")
-                        result = None
+            json_str = response[json_start:json_end]
+            logger.debug(f"Extracted JSON string: {json_str}")
             
-            # Strategy 3: Look for key-value pairs and construct JSON manually
-            if result is None:
-                logger.debug("Strategy 3 - Attempting manual JSON construction from key-value pairs")
-                result = self._construct_json_from_text(response)
-                if result:
-                    logger.info(f"Strategy 3 successful - Constructed JSON: {result}")
+            result = json.loads(json_str)
+            logger.debug(f"Parsed JSON result: {result}")
             
-            if result is None:
-                logger.error("All JSON extraction strategies failed")
-                raise ValueError("Could not extract valid JSON from response")
-            
-            # Validate and fill missing fields
+            # Validate required fields
             required_fields = ['classification', 'confidence', 'reasoning', 'category']
             for field in required_fields:
                 if field not in result:
@@ -316,81 +302,47 @@ Follow the examples above exactly."""
     def _parse_transaction_extraction_response(self, response: str) -> List[Dict[str, Any]]:
         logger.info(f"Parsing transaction extraction response: {response}")
         try:
-            # Try multiple JSON extraction strategies
-            transactions = None
-            
-            # Strategy 1: Look for JSON array with brackets
+            # Look for JSON array with brackets
             json_start = response.find('[')
             json_end = response.rfind(']') + 1
             
-            if json_start != -1 and json_end > json_start:
-                try:
-                    json_str = response[json_start:json_end]
-                    logger.info(f"Strategy 1 - Extracted JSON array string: {json_str}")
-                    transactions = json.loads(json_str)
-                    logger.info(f"Strategy 1 successful - Parsed JSON array: {transactions}")
-                except json.JSONDecodeError as e:
-                    logger.warning(f"Strategy 1 failed - JSON decode error: {e}")
-                    transactions = None
-            
-            # Strategy 2: Look for multiple JSON objects
-            if transactions is None:
-                logger.debug("Strategy 2 - Looking for multiple JSON objects")
-                import re
-                json_objects = re.findall(r'\{[^{}]*"[^"]*"[^{}]*\}', response)
-                if json_objects:
-                    try:
-                        transactions = []
-                        for obj_str in json_objects:
-                            obj = json.loads(obj_str)
-                            if 'date' in obj and 'description' in obj and 'amount' in obj:
-                                transactions.append(obj)
-                        logger.info(f"Strategy 2 successful - Found {len(transactions)} JSON objects")
-                    except json.JSONDecodeError as e:
-                        logger.warning(f"Strategy 2 failed - JSON decode error: {e}")
-                        transactions = None
-            
-            # Strategy 3: Manual parsing from text
-            if transactions is None:
-                logger.debug("Strategy 3 - Attempting manual parsing from text")
-                transactions = self._extract_transactions_from_text(response)
-                if transactions:
-                    logger.info(f"Strategy 3 successful - Manually extracted {len(transactions)} transactions")
-            
-            if transactions is None:
-                logger.error("All transaction extraction strategies failed")
+            if json_start == -1 or json_end == 0:
+                logger.warning("No JSON array found in response")
                 return []
             
-            # Validate and clean each transaction
+            json_str = response[json_start:json_end]
+            logger.info(f"Extracted JSON array string: {json_str}")
+            
+            transactions = json.loads(json_str)
+            logger.info(f"Successfully parsed JSON array: {transactions}")
+            
+            # Validate each transaction
             validated_transactions = []
             for i, transaction in enumerate(transactions):
                 logger.debug(f"Validating transaction {i + 1}: {transaction}")
                 
-                # Clean the transaction data
-                cleaned_transaction = self._clean_transaction_data(transaction)
-                
-                if isinstance(cleaned_transaction, dict) and 'date' in cleaned_transaction and 'description' in cleaned_transaction and 'amount' in cleaned_transaction:
+                if isinstance(transaction, dict) and 'date' in transaction and 'description' in transaction and 'amount' in transaction:
                     # Ensure the amount is a valid number
                     try:
-                        amount = float(cleaned_transaction['amount'])
+                        amount = float(transaction['amount'])
                         if amount == 0:
                             logger.warning(f"Transaction {i + 1} has zero amount, skipping")
                             continue
                     except (ValueError, TypeError):
-                        logger.warning(f"Transaction {i + 1} has invalid amount: {cleaned_transaction['amount']}, skipping")
+                        logger.warning(f"Transaction {i + 1} has invalid amount: {transaction['amount']}, skipping")
                         continue
                     
                     validated_transaction = {
-                        'date': cleaned_transaction['date'],
-                        'description': cleaned_transaction['description'],
+                        'date': transaction['date'],
+                        'description': transaction['description'],
                         'amount': amount,
-                        'currency': cleaned_transaction.get('currency', 'USD'),
-                        'merchant': cleaned_transaction.get('merchant', '')
+                        'currency': transaction.get('currency', 'USD'),
+                        'merchant': transaction.get('merchant', '')
                     }
                     validated_transactions.append(validated_transaction)
                     logger.debug(f"Transaction {i + 1} validated: {validated_transaction}")
                 else:
-                    logger.warning(f"Transaction {i + 1} missing required fields: {cleaned_transaction}")
+                    logger.warning(f"Transaction {i + 1} missing required fields: {transaction}")
             
             logger.info(f"Final validated transactions: {json.dumps(validated_transactions, indent=2)}")
             return validated_transactions
@@ -398,182 +350,6 @@ Follow the examples above exactly."""
         except Exception as e:
             logger.error(f"Error parsing transaction extraction response: {str(e)}", exc_info=True)
             logger.error(f"Raw response that failed to parse: {response}")
-            return []
-    
-    def _clean_transaction_data(self, transaction: Dict[str, Any]) -> Dict[str, Any]:
-        """Clean and validate transaction data to prevent nested JSON issues"""
-        logger.debug(f"Cleaning transaction data: {transaction}")
-        try:
-            cleaned = {}
-            
-            # Handle date field
-            if 'date' in transaction:
-                date_val = transaction['date']
-                logger.debug(f"Processing date field: {date_val} (type: {type(date_val)})")
-                if isinstance(date_val, str) and date_val.strip():
-                    # Validate date format (YYYY-MM-DD)
-                    import re
-                    if re.match(r'^\d{4}-\d{2}-\d{2}$', date_val):
-                        cleaned['date'] = date_val
-                        logger.debug(f"Date validated: {date_val}")
-                    else:
-                        logger.warning(f"Invalid date format: {date_val}, setting to today")
-                        from datetime import datetime
-                        cleaned['date'] = datetime.now().strftime('%Y-%m-%d')
-                else:
-                    logger.warning(f"Empty or invalid date: {date_val}, setting to today")
-                    from datetime import datetime
-                    cleaned['date'] = datetime.now().strftime('%Y-%m-%d')
-            
-            # Handle description field
-            if 'description' in transaction:
-                desc_val = transaction['description']
-                logger.debug(f"Processing description field: {desc_val} (type: {type(desc_val)})")
-                if isinstance(desc_val, str):
-                    # Remove any JSON artifacts or extra characters
-                    desc_val = desc_val.strip()
-                    if desc_val.startswith('{') and desc_val.endswith('}'):
-                        logger.warning(f"Description contains JSON: {desc_val}, extracting text content")
-                        try:
-                            # Try to extract meaningful text from the JSON
-                            json_obj = json.loads(desc_val)
-                            logger.debug(f"Parsed JSON from description: {json_obj}")
-                            if 'description' in json_obj:
-                                desc_val = json_obj['description']
-                                logger.debug(f"Extracted description from JSON: {desc_val}")
-                            elif 'merchant' in json_obj:
-                                desc_val = json_obj['merchant']
-                                logger.debug(f"Extracted merchant as description: {desc_val}")
-                            else:
-                                desc_val = "Transaction description"
-                        except Exception as e:
-                            logger.error(f"Failed to parse JSON from description: {e}")
-                            desc_val = "Transaction description"
-                    
-                    # Clean up common artifacts
-                    desc_val = desc_val.replace('",', '').replace('"', '').strip()
-                    cleaned['description'] = desc_val
-                    logger.debug(f"Final cleaned description: {desc_val}")
-                else:
-                    cleaned['description'] = str(desc_val)
-            
-            # Handle amount field
-            if 'amount' in transaction:
-                amount_val = transaction['amount']
-                logger.debug(f"Processing amount field: {amount_val} (type: {type(amount_val)})")
-                if isinstance(amount_val, (int, float)):
-                    cleaned['amount'] = amount_val
-                    logger.debug(f"Amount is numeric: {amount_val}")
-                elif isinstance(amount_val, str):
-                    # Clean amount string and convert to float
-                    amount_str = amount_val.strip().replace(',', '').replace('$', '').replace('£', '').replace('€', '')
-                    logger.debug(f"Cleaned amount string: '{amount_str}'")
-                    try:
-                        cleaned['amount'] = float(amount_str)
-                        logger.debug(f"Amount converted to float: {cleaned['amount']}")
-                    except ValueError:
-                        logger.error(f"Invalid amount value: {amount_val}")
-                        return None
-                else:
-                    logger.error(f"Unexpected amount type: {type(amount_val)} for value: {amount_val}")
-                    return None
-            
-            # Handle currency field
-            if 'currency' in transaction:
-                currency_val = transaction['currency']
-                if isinstance(currency_val, str) and currency_val.strip():
-                    cleaned['currency'] = currency_val.strip().upper()
-                else:
-                    cleaned['currency'] = 'USD'
-            
-            # Handle merchant field
-            if 'merchant' in transaction:
-                merchant_val = transaction['merchant']
-                if isinstance(merchant_val, str) and merchant_val.strip():
-                    cleaned['merchant'] = merchant_val.strip()
-                else:
-                    cleaned['merchant'] = ''
-            
-            logger.debug(f"Final cleaned transaction: {cleaned}")
-            return cleaned
-            
-        except Exception as e:
-            logger.error(f"Error cleaning transaction data: {str(e)}")
-            return None
-    
-    def _construct_json_from_text(self, text: str) -> Dict[str, Any]:
-        """Manually construct JSON from text when parsing fails"""
-        try:
-            result = {}
-            
-            # Look for classification
-            if 'business' in text.lower():
-                result['classification'] = 'business'
-            elif 'personal' in text.lower():
-                result['classification'] = 'personal'
-            else:
-                result['classification'] = 'personal'
-            
-            # Look for confidence
-            import re
-            confidence_match = re.search(r'confidence[:\s]*(\d*\.?\d*)', text.lower())
-            if confidence_match:
-                try:
-                    result['confidence'] = float(confidence_match.group(1))
-                except:
-                    result['confidence'] = 0.5
-            else:
-                result['confidence'] = 0.5
-            
-            # Look for reasoning
-            reasoning_match = re.search(r'reasoning[:\s]*(.+?)(?=\n|$)', text.lower())
-            if reasoning_match:
-                result['reasoning'] = reasoning_match.group(1).strip()
-            else:
-                result['reasoning'] = 'Extracted from text analysis'
-            
-            # Look for category
-            category_match = re.search(r'category[:\s]*(\w+)', text.lower())
-            if category_match:
-                result['category'] = category_match.group(1)
-            else:
-                result['category'] = 'unknown'
-            
-            return result
-        except Exception as e:
-            logger.error(f"Error constructing JSON from text: {str(e)}")
-            return None
-    
-    def _extract_transactions_from_text(self, text: str) -> List[Dict[str, Any]]:
-        """Manually extract transactions from text when JSON parsing fails"""
-        try:
-            transactions = []
-            lines = text.split('\n')
-            
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
-                
-                # Look for date patterns
-                import re
-                date_match = re.search(r'(\d{4}-\d{2}-\d{2})', line)
-                if date_match:
-                    # Try to extract amount and description
-                    amount_match = re.search(r'([+-]?\d+\.?\d*)', line)
-                    if amount_match:
-                        transaction = {
-                            'date': date_match.group(1),
-                            'description': line.replace(date_match.group(1), '').replace(amount_match.group(1), '').strip(),
-                            'amount': float(amount_match.group(1)),
-                            'currency': 'USD',
-                            'merchant': ''
-                        }
-                        transactions.append(transaction)
-            
-            return transactions
-        except Exception as e:
-            logger.error(f"Error extracting transactions from text: {str(e)}")
             return []
     
     def batch_classify_transactions(self, transactions: list) -> list:

@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import {
     DocumentArrowDownIcon,
     ChartBarIcon,
-    CalendarIcon,
     BanknotesIcon,
 } from '@heroicons/react/24/outline';
 

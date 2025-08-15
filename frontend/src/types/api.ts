@@ -26,9 +26,13 @@ export interface Transaction {
     date: string;
     description: string;
     amount: number;
+    currency: string;
+    merchant: string;
     category?: string;
-    is_business: boolean;
+    is_business_expense: boolean;
     confidence_score?: number;
+    manually_overridden?: boolean;
+    llm_reasoning?: string;
     created_at: string;
 }
 

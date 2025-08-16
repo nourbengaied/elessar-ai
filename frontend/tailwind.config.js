@@ -8,6 +8,7 @@ module.exports = {
       fontFamily: {
         sans: ['Albert Sans', 'Inter', 'Geist', 'SF Pro Display', 'system-ui', 'sans-serif'],
         'neo': ['Albert Sans', 'Inter', 'system-ui', 'sans-serif'],
+        'inter': ['Inter', 'system-ui', '-apple-system', 'SF Pro Text', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
       },
       letterSpacing: {
         'tight': '-0.025em',
@@ -23,6 +24,40 @@ module.exports = {
         '3xl': ['1.875rem', { lineHeight: '2.25rem', letterSpacing: '-0.025em' }],
         '4xl': ['2.25rem', { lineHeight: '2.5rem', letterSpacing: '-0.025em' }],
       },
+      animation: {
+        'fade-in': 'fadeIn 0.6s ease-out',
+        'slide-down': 'slideDown 0.5s ease-out',
+        'slide-up': 'slideUp 0.5s ease-out',
+        'slide-up-delay': 'slideUp 0.5s ease-out 0.1s both',
+        'slide-up-delay-2': 'slideUp 0.5s ease-out 0.2s both',
+        'slide-up-delay-3': 'slideUp 0.5s ease-out 0.3s both',
+        'bounce-slow': 'bounce 2s infinite',
+        'pulse-slow': 'pulse 3s infinite',
+        'wiggle': 'wiggle 1s ease-in-out infinite',
+        'float': 'float 3s ease-in-out infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideDown: {
+          '0%': { transform: 'translateY(-20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(-3deg)' },
+          '50%': { transform: 'rotate(3deg)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+      },
       colors: {
         brand: {
           50: '#f0f9f6',
@@ -30,11 +65,11 @@ module.exports = {
           200: '#b3e1d3',
           300: '#8dd2bd',
           400: '#67c3a7',
-          500: '#2F6F5E', // Main brand color
-          600: '#2a5f51',
-          700: '#254f44',
-          800: '#203f37',
-          900: '#1b2f2a',
+          500: '#4A7C59', // Softer main brand color
+          600: '#3f6a4b',
+          700: '#34583d',
+          800: '#29462f',
+          900: '#1e3421',
         },
         mint: {
           50: '#f7fdfb',
@@ -78,11 +113,11 @@ module.exports = {
           200: '#b3e1d3',
           300: '#8dd2bd',
           400: '#67c3a7',
-          500: '#2F6F5E', // Brand green
-          600: '#2a5f51',
-          700: '#254f44',
-          800: '#203f37',
-          900: '#1b2f2a',
+          500: '#4A7C59', // Softer brand green
+          600: '#3f6a4b',
+          700: '#34583d',
+          800: '#29462f',
+          900: '#1e3421',
         },
         success: {
           50: '#f0f9f6',
@@ -90,11 +125,11 @@ module.exports = {
           200: '#b3e1d3',
           300: '#8dd2bd',
           400: '#67c3a7',
-          500: '#2F6F5E',
-          600: '#2a5f51',
-          700: '#254f44',
-          800: '#203f37',
-          900: '#1b2f2a',
+          500: '#4A7C59',
+          600: '#3f6a4b',
+          700: '#34583d',
+          800: '#29462f',
+          900: '#1e3421',
         },
         warning: {
           50: '#fef9f7',

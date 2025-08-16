@@ -390,6 +390,15 @@ class TransactionService:
             .filter(Transaction.user_id == user_id, Transaction.manually_overridden == True)\
             .count()
         
+        # Calculate amounts
+        all_transactions = self.db.query(Transaction)\
+            .filter(Transaction.user_id == user_id)\
+            .all()
+        
+        total_amount = sum(float(t.amount) for t in all_transactions)
+        business_amount = sum(float(t.amount) for t in all_transactions if t.is_business_expense)
+        personal_amount = sum(float(t.amount) for t in all_transactions if not t.is_business_expense)
+        
         avg_confidence = self.db.query(Transaction.confidence_score)\
             .filter(Transaction.user_id == user_id)\
             .all()
@@ -400,6 +409,9 @@ class TransactionService:
             "total_transactions": total_transactions,
             "business_transactions": business_transactions,
             "personal_transactions": personal_transactions,
+            "total_amount": int(total_amount),
+            "business_amount": int(business_amount),
+            "personal_amount": int(personal_amount),
             "overridden_transactions": overridden_transactions,
             "average_confidence": round(avg_confidence, 2),
             "business_percentage": round((business_transactions / total_transactions * 100) if total_transactions > 0 else 0, 2)

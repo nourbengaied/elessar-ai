@@ -147,3 +147,14 @@ celerybeat.pid
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Testing scripts and files
+test_*.py
+test_*.html
+test_*.js
+test-*.py
+test-*.html
+test-*.js
+run_tests.py
+**/test_*.py
+**/test-*.py

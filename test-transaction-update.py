@@ -8,7 +8,7 @@ import json
 
 def test_transaction_update():
     """Test the transaction update endpoint"""
-    base_url = "http://localhost:8000"
+    base_url = "http://nv9zp49sye.execute-api.eu-west-2.amazonaws.com/prod"
     
     print("🔍 Testing Transaction Update Functionality")
     print("=" * 50)
@@ -23,7 +23,7 @@ def test_transaction_update():
         }
         
         response = requests.put(
-            f"{base_url}/api/v1/transactions/test-transaction-id",
+            f"{base_url}/transactions/test-transaction-id",
             json=test_data
         )
         
@@ -42,18 +42,18 @@ def test_transaction_update():
             print(f"Response: {response.text}")
             
     except requests.exceptions.ConnectionError:
-        print("❌ Could not connect to backend. Make sure it's running on localhost:8000")
+        print("❌ Could not connect to backend. Make sure it's running on nv9zp49sye.execute-api.eu-west-2.amazonaws.com/prod")
     except Exception as e:
         print(f"❌ Error: {str(e)}")
 
 def test_transaction_get():
     """Test the transaction get endpoint"""
-    base_url = "http://localhost:8000"
+    base_url = "http://nv9zp49sye.execute-api.eu-west-2.amazonaws.com/prod"
     
     print("\n🧪 Testing transaction get endpoint...")
     
     try:
-        response = requests.get(f"{base_url}/api/v1/transactions/")
+        response = requests.get(f"{base_url}/transactions/")
         
         if response.status_code == 401:
             print("✅ Transaction get endpoint exists (401 Unauthorized expected without auth)")
@@ -69,7 +69,7 @@ def test_transaction_get():
             print(f"Response: {response.text}")
             
     except requests.exceptions.ConnectionError:
-        print("❌ Could not connect to backend. Make sure it's running on localhost:8000")
+        print("❌ Could not connect to backend. Make sure it's running on nv9zp49sye.execute-api.eu-west-2.amazonaws.com/prod")
     except Exception as e:
         print(f"❌ Error: {str(e)}")
 

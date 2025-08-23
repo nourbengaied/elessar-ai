@@ -5,6 +5,10 @@ import toast from 'react-hot-toast';
 import {
     TrashIcon,
     FunnelIcon,
+    ChevronDownIcon,
+    PencilIcon,
+    XMarkIcon,
+    CheckIcon,
 } from '@heroicons/react/24/outline';
 
 const Transactions: React.FC = () => {
@@ -12,14 +16,32 @@ const Transactions: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'business' | 'personal'>('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+    const [editingTransaction, setEditingTransaction] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState({
+        description: '',
+        amount: '',
+        category: '',
+        date: '',
+    });
 
     useEffect(() => {
         fetchTransactions();
     }, []);
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setOpenDropdown(null);
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
     const fetchTransactions = async () => {
         try {
-            const response = await api.get<TransactionsResponse>('/api/v1/transactions/');
+            const response = await api.get<TransactionsResponse>('/transactions/');
             setTransactions(response.data.transactions);
         } catch (error) {
             toast.error('Failed to fetch transactions');
@@ -30,7 +52,7 @@ const Transactions: React.FC = () => {
 
     const handleClassificationChange = async (transactionId: string, isBusiness: boolean) => {
         try {
-            await api.put(`/api/v1/transactions/${transactionId}`, {
+            await api.put(`/transactions/${transactionId}`, {
                 is_business: isBusiness,
             });
 
@@ -41,6 +63,7 @@ const Transactions: React.FC = () => {
             );
 
             toast.success('Classification updated successfully');
+            setOpenDropdown(null);
         } catch (error) {
             toast.error('Failed to update classification');
         }
@@ -52,7 +75,7 @@ const Transactions: React.FC = () => {
         }
 
         try {
-            await api.delete(`/api/v1/transactions/${transactionId}`);
+            await api.delete(`/transactions/${transactionId}`);
             setTransactions(prev => prev.filter(t => t.id !== transactionId));
             toast.success('Transaction deleted successfully');
         } catch (error) {
@@ -66,11 +89,69 @@ const Transactions: React.FC = () => {
         }
 
         try {
-            const response = await api.delete<{message: string; deleted_count: number}>('/api/v1/transactions/');
+            const response = await api.delete<{message: string; deleted_count: number}>('/transactions/');
             setTransactions([]);
             toast.success(`Successfully cleared ${response.data.deleted_count} transactions`);
         } catch (error) {
             toast.error('Failed to clear transactions');
+        }
+    };
+
+    const toggleDropdown = (transactionId: string, event: React.MouseEvent) => {
+        event.stopPropagation();
+        setOpenDropdown(openDropdown === transactionId ? null : transactionId);
+    };
+
+    const startEditing = (transaction: Transaction) => {
+        setEditingTransaction(transaction.id);
+        setEditForm({
+            description: transaction.description,
+            amount: Math.abs(transaction.amount).toString(),
+            category: transaction.category || '',
+            date: transaction.date.split('T')[0], // Convert ISO date to YYYY-MM-DD
+        });
+    };
+
+    const cancelEditing = () => {
+        setEditingTransaction(null);
+        setEditForm({
+            description: '',
+            amount: '',
+            category: '',
+            date: '',
+        });
+    };
+
+    const saveEdit = async (transactionId: string) => {
+        const transaction = transactions.find(t => t.id === transactionId);
+        if (!transaction) return;
+
+        try {
+            const updatedData = {
+                description: editForm.description,
+                amount: transaction.amount >= 0 ? parseFloat(editForm.amount) : -parseFloat(editForm.amount),
+                category: editForm.category || undefined,
+                date: editForm.date,
+            };
+
+            await api.put(`/transactions/${transactionId}/details`, updatedData);
+
+            setTransactions(prev =>
+                prev.map(t =>
+                    t.id === transactionId ? { ...t, ...updatedData } : t
+                )
+            );
+
+            toast.success('Transaction updated successfully');
+            setEditingTransaction(null);
+            setEditForm({
+                description: '',
+                amount: '',
+                category: '',
+                date: '',
+            });
+        } catch (error) {
+            toast.error('Failed to update transaction');
         }
     };
 
@@ -94,167 +175,239 @@ const Transactions: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex justify-between items-start">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Transactions</h1>
-                    <p className="mt-1 text-base text-zinc-500 tracking-tight">
-                        View and manage your transaction classifications
-                    </p>
-                </div>
-                
-                {transactions.length > 0 && (
-                    <button
-                        onClick={handleClearAllTransactions}
-                        className="inline-flex items-center px-4 py-2 border border-coral-300 rounded-md shadow-sm text-base font-medium text-coral-700 bg-white hover:bg-coral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral-500 transition-colors tracking-tight"
-                    >
-                        <TrashIcon className="h-4 w-4 mr-2" />
-                        Clear All
-                    </button>
-                )}
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white/80 shadow rounded-lg p-6">
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1">
-                        <label htmlFor="search" className="block text-base font-medium text-gray-700 mb-1 tracking-tight">
-                            Search
-                        </label>
-                        <input
-                            type="text"
-                            id="search"
-                            placeholder="Search transactions..."
-                            className="w-full px-3 py-2 border border-sand-200 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 text-base tracking-tight"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
+            <div className="space-y-6">
+                {/* Header */}
+                <div className="flex justify-between items-start">
                     <div>
-                        <label htmlFor="filter" className="block text-base font-medium text-gray-700 mb-1 tracking-tight">
-                            Filter
-                        </label>
-                        <select
-                            id="filter"
-                            className="px-3 py-2 border border-sand-200 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 text-base tracking-tight"
-                            value={filter}
-                            onChange={(e) => setFilter(e.target.value as 'all' | 'business' | 'personal')}
-                        >
-                            <option value="all">All Transactions</option>
-                            <option value="business">Business Only</option>
-                            <option value="personal">Personal Only</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {/* Transactions Table */}
-            <div className="bg-white/80 shadow rounded-lg overflow-hidden">
-                <div className="px-6 py-4 border-b border-sand-200">
-                    <h3 className="text-xl font-semibold text-gray-900 tracking-tight">
-                        {filteredTransactions.length} transactions found
-                    </h3>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-sand-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Date
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Description
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Amount
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Category
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Classification
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Confidence
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-sand-200">
-                            {filteredTransactions.map((transaction) => (
-                                <tr key={transaction.id} className="hover:bg-sand-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 tracking-tight">
-                                        {new Date(transaction.date).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 text-base text-gray-900 tracking-tight">
-                                        {transaction.description}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 tracking-tight">
-                                        <span className={transaction.amount >= 0 ? 'text-brand-600' : 'text-coral-600'}>
-                                            ${Math.abs(transaction.amount).toFixed(2)}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-base text-zinc-500 tracking-tight">
-                                        {transaction.category || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <select
-                                            className={`text-sm font-semibold rounded-full px-2 py-1 border tracking-tight ${transaction.is_business_expense
-                                                    ? 'bg-brand-100 text-brand-800 border-brand-200'
-                                                    : 'bg-sand-100 text-gray-800 border-sand-200'
-                                                }`}
-                                            value={transaction.is_business_expense ? 'business' : 'personal'}
-                                            onChange={(e) => handleClassificationChange(transaction.id, e.target.value === 'business')}
-                                        >
-                                            <option value="business">Business</option>
-                                            <option value="personal">Personal</option>
-                                        </select>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-base text-zinc-500 tracking-tight">
-                                        {transaction.confidence_score ? (
-                                            <span className={`inline-flex px-2 py-1 text-sm font-semibold rounded-full tracking-tight ${transaction.confidence_score > 0.8
-                                                    ? 'bg-brand-100 text-brand-800'
-                                                    : transaction.confidence_score > 0.6
-                                                        ? 'bg-mint-100 text-mint-800'
-                                                        : 'bg-coral-100 text-coral-800'
-                                                }`}>
-                                                {(transaction.confidence_score * 100).toFixed(0)}%
-                                            </span>
-                                        ) : (
-                                            '-'
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-base font-medium">
-                                        <div className="flex space-x-2">
-                                            <button
-                                                onClick={() => handleDeleteTransaction(transaction.id)}
-                                                className="text-coral-600 hover:text-coral-900"
-                                                title="Delete transaction"
-                                            >
-                                                <TrashIcon className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {filteredTransactions.length === 0 && (
-                    <div className="text-center py-12">
-                        <FunnelIcon className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No transactions found</h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Try adjusting your search or filter criteria.
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Transactions</h1>
+                        <p className="mt-1 text-base text-zinc-500 tracking-tight">
+                            View and manage your transaction data
                         </p>
                     </div>
-                )}
+                </div>
+
+                {/* Filters and Search */}
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => setFilter('all')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                filter === 'all'
+                                    ? 'bg-brand-100 text-brand-700'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                        >
+                            All ({transactions.length})
+                        </button>
+                        <button
+                            onClick={() => setFilter('business')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                filter === 'business'
+                                    ? 'bg-brand-100 text-brand-700'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                        >
+                            Business ({transactions.filter(t => t.is_business_expense).length})
+                        </button>
+                        <button
+                            onClick={() => setFilter('personal')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                filter === 'personal'
+                                    ? 'bg-brand-100 text-brand-700'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                        >
+                            Personal ({transactions.filter(t => !t.is_business_expense).length})
+                        </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="Search transactions..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                        />
+                        <button
+                            onClick={handleClearAllTransactions}
+                            className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2"
+                        >
+                            <TrashIcon className="h-4 w-4" />
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+
+                {/* Transactions List */}
+                <div className="bg-white rounded-lg shadow">
+                    {filteredTransactions.length === 0 ? (
+                        <div className="p-8 text-center">
+                            <p className="text-gray-500">No transactions found.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Description
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Amount
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Date
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Category
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Type
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {filteredTransactions.map((transaction) => (
+                                        <tr key={transaction.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                <div className="flex items-center justify-between">
+                                                    <span>{editingTransaction === transaction.id ? (
+                                                        <input
+                                                            type="text"
+                                                            value={editForm.description}
+                                                            onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                                                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                        />
+                                                    ) : (
+                                                        transaction.description
+                                                    )}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {editingTransaction === transaction.id ? (
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={editForm.amount}
+                                                        onChange={(e) => setEditForm(prev => ({ ...prev, amount: e.target.value }))}
+                                                        className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                    />
+                                                ) : (
+                                                    <span className={transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                                        {transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {editingTransaction === transaction.id ? (
+                                                    <input
+                                                        type="date"
+                                                        value={editForm.date}
+                                                        onChange={(e) => setEditForm(prev => ({ ...prev, date: e.target.value }))}
+                                                        className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                    />
+                                                ) : (
+                                                    new Date(transaction.date).toLocaleDateString()
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {editingTransaction === transaction.id ? (
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.category}
+                                                        onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
+                                                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                    />
+                                                ) : (
+                                                    transaction.category || 'Uncategorized'
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={(e) => toggleDropdown(transaction.id, e)}
+                                                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                                                                transaction.is_business_expense
+                                                                    ? 'bg-brand-100 text-brand-800 hover:bg-brand-200'
+                                                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                                            }`}
+                                                        >
+                                                            {transaction.is_business_expense ? 'Business' : 'Personal'}
+                                                            <ChevronDownIcon className="ml-1 h-3 w-3" />
+                                                        </button>
+                                                        
+                                                        {openDropdown === transaction.id && (
+                                                            <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                                                <div className="py-1">
+                                                                    <button
+                                                                        onClick={() => handleClassificationChange(transaction.id, true)}
+                                                                        className={`block w-full text-left px-4 py-2 text-sm ${
+                                                                            transaction.is_business_expense
+                                                                                ? 'bg-brand-50 text-brand-700'
+                                                                                : 'text-gray-700 hover:bg-gray-50'
+                                                                        }`}
+                                                                    >
+                                                                        Business
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleClassificationChange(transaction.id, false)}
+                                                                        className={`block w-full text-left px-4 py-2 text-sm ${
+                                                                            !transaction.is_business_expense
+                                                                                ? 'bg-gray-50 text-gray-700'
+                                                                                : 'text-gray-700 hover:bg-gray-50'
+                                                                        }`}
+                                                                    >
+                                                                        Personal
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {editingTransaction === transaction.id ? (
+                                                        <div className="flex gap-2 ml-2">
+                                                            <button
+                                                                onClick={() => saveEdit(transaction.id)}
+                                                                className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-100 transition-all duration-200 hover:scale-125 hover:shadow-sm"
+                                                                title="Save changes"
+                                                            >
+                                                                <CheckIcon className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={cancelEditing}
+                                                                className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 hover:scale-125 hover:shadow-sm"
+                                                                title="Cancel editing"
+                                                            >
+                                                                <XMarkIcon className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteTransaction(transaction.id)}
+                                                                className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-100 transition-all duration-200 hover:scale-125 hover:shadow-sm"
+                                                                title="Delete transaction"
+                                                            >
+                                                                <TrashIcon className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => startEditing(transaction)}
+                                                            className="text-brand-600 hover:text-brand-900 p-2 rounded-lg hover:bg-brand-100 transition-all duration-200 hover:scale-125 hover:shadow-sm ml-2"
+                                                            title="Edit transaction"
+                                                        >
+                                                            <PencilIcon className="h-4 w-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

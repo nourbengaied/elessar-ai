@@ -1,21 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from ..database import get_db
-from ..models.user import User
-from ..utils.security import get_password_hash, verify_password, create_access_token
+from ..services.user_service import UserService
+from ..utils.security import create_access_token, get_current_user
 from ..utils.validators import validate_email, validate_password
-from ..utils.security import get_current_user
+import logging
 
+logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(tags=["authentication"])
 
 class UserRegister(BaseModel):
     email: str
     password: str
+    full_name: str
     business_name: Optional[str] = None
-    tax_id: Optional[str] = None
+    business_type: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: str
@@ -27,102 +28,227 @@ class Token(BaseModel):
     user_id: str
     email: str
 
+class UserProfile(BaseModel):
+    id: str
+    email: str
+    full_name: str
+    business_name: Optional[str] = None
+    business_type: Optional[str] = None
+    created_at: str
+
 @router.post("/register", response_model=Token)
-async def register(user_data: UserRegister, db: Session = Depends(get_db)):
+async def register(user_data: UserRegister):
     """
     Register a new user
     """
-    # Validate email
-    if not validate_email(user_data.email):
+    try:
+        logger.info(f"Registration attempt for email: {user_data.email}")
+        
+        # Validate email
+        logger.info("Validating email...")
+        if not validate_email(user_data.email):
+            logger.warning(f"Invalid email format: {user_data.email}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid email format"
+            )
+        
+        # Validate password
+        logger.info("Validating password...")
+        if not validate_password(user_data.password):
+            logger.warning("Password validation failed")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password must be at least 8 characters long"
+            )
+        
+        # Create user service
+        logger.info("Creating user service...")
+        user_service = UserService()
+        
+        # Create user
+        logger.info("Creating user in database...")
+        user = user_service.create_user(
+            email=user_data.email,
+            password=user_data.password,
+            full_name=user_data.full_name,
+            business_name=user_data.business_name,
+            business_type=user_data.business_type
+        )
+        
+        logger.info("User created, generating token...")
+        # Create access token
+        access_token = create_access_token(data={"sub": user["email"], "user_id": user["id"]})
+        
+        logger.info(f"User registered successfully: {user_data.email}")
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            user_id=user["id"],
+            email=user["email"]
+        )
+        
+    except ValueError as e:
+        logger.warning(f"Registration validation failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid email format"
+            detail=str(e)
         )
-    
-    # Validate password
-    if not validate_password(user_data.password):
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must be at least 8 characters with uppercase, lowercase, and number"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
         )
-    
-    # Check if user already exists
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-    
-    # Create new user
-    hashed_password = get_password_hash(user_data.password)
-    user = User(
-        email=user_data.email,
-        password_hash=hashed_password,
-        business_name=user_data.business_name,
-        tax_id=user_data.tax_id
-    )
-    
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    
-    # Create access token
-    access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user_id=str(user.id),
-        email=user.email
-    )
 
 @router.post("/login", response_model=Token)
-async def login(user_data: UserLogin, db: Session = Depends(get_db)):
+async def login(user_data: UserLogin):
     """
-    Login user
+    Login user and return access token
     """
-    # Find user by email
-    user = db.query(User).filter(User.email == user_data.email).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+    try:
+        # Create user service
+        user_service = UserService()
+        
+        # Authenticate user
+        user = user_service.authenticate_user(user_data.email, user_data.password)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user["email"], "user_id": user["id"]})
+        
+        logger.info(f"User logged in successfully: {user_data.email}")
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            user_id=user["id"],
+            email=user["email"]
         )
-    
-    # Verify password
-    if not verify_password(user_data.password, user.password_hash):
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Login failed"
         )
-    
-    # Create access token
-    access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user_id=str(user.id),
-        email=user.email
-    )
+
+@router.get("/profile", response_model=UserProfile)
+async def get_profile(current_user: dict = Depends(get_current_user)):
+    """
+    Get current user profile
+    """
+    try:
+        return UserProfile(
+            id=current_user["id"],
+            email=current_user["email"],
+            full_name=current_user.get("full_name", ""),
+            business_name=current_user.get("business_name"),
+            business_type=current_user.get("business_type"),
+            created_at=current_user.get("created_at", "")
+        )
+    except Exception as e:
+        logger.error(f"Profile error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve profile"
+        )
 
 @router.get("/me")
-async def get_current_user_info(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """
-    Get current user information
+    Get current user information (simple endpoint)
     """
-    user = db.query(User).filter(User.id == current_user["sub"]).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
     return {
-        "id": str(user.id),
-        "email": user.email,
-        "business_name": user.business_name,
-        "tax_id": user.tax_id,
-        "created_at": user.created_at.isoformat()
-    } 
+        "user_id": current_user["id"],
+        "email": current_user["email"],
+        "full_name": current_user.get("full_name", ""),
+        "business_name": current_user.get("business_name", "")
+    }
+
+class UserProfileUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    business_name: Optional[str] = None
+    tax_id: Optional[str] = None
+
+@router.put("/profile", response_model=UserProfile)
+async def update_profile(
+    profile_data: UserProfileUpdate, 
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update user profile
+    """
+    try:
+        logger.info(f"Profile update request for user: {current_user['id']}")
+        
+        # Validate email if provided
+        if profile_data.email and not validate_email(profile_data.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid email format"
+            )
+        
+        # Create user service
+        user_service = UserService()
+        
+        # Prepare update data (only include non-None fields)
+        update_data = {}
+        
+        # Combine first_name and last_name into full_name if either is provided
+        if profile_data.first_name is not None or profile_data.last_name is not None:
+            first_name = profile_data.first_name or ""
+            last_name = profile_data.last_name or ""
+            update_data["full_name"] = f"{first_name} {last_name}".strip()
+        
+        if profile_data.email is not None:
+            update_data["email"] = profile_data.email
+        
+        if profile_data.business_name is not None:
+            update_data["business_name"] = profile_data.business_name
+            
+        # Note: tax_id would need to be added to the user model if needed
+        
+        # Update user
+        updated_user = user_service.update_user(current_user["id"], update_data)
+        
+        logger.info(f"Profile updated successfully for user: {current_user['id']}")
+        
+        return UserProfile(
+            id=updated_user["id"],
+            email=updated_user["email"],
+            full_name=updated_user.get("full_name", ""),
+            business_name=updated_user.get("business_name"),
+            business_type=updated_user.get("business_type"),
+            created_at=updated_user.get("created_at", "")
+        )
+        
+    except ValueError as e:
+        logger.warning(f"Profile update validation failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Profile update error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Profile update failed: {str(e)}"
+        ) 

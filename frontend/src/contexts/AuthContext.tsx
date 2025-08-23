@@ -8,6 +8,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, password: string, business_name?: string, tax_id?: string) => Promise<void>;
     logout: () => void;
+    updateUser: () => Promise<void>;
     loading: boolean;
 }
 
@@ -46,7 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const fetchUser = async () => {
         try {
             console.log('AuthProvider: Fetching user data...');
-            const response = await api.get('/api/v1/auth/me');
+            const response = await api.get('/auth/me');
             console.log('AuthProvider: User data received:', response.data);
             setUser(response.data as User);
         } catch (error: any) {
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const login = async (email: string, password: string) => {
         try {
             console.log('AuthProvider: Logging in...');
-            const response = await api.post<LoginResponse>('/api/v1/auth/login', { email, password });
+            const response = await api.post<LoginResponse>('/auth/login', { email, password });
             const { access_token } = response.data;
             console.log('AuthProvider: Login successful, token received');
 
@@ -73,7 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
             // Fetch user details
-            const userResponse = await api.get('/api/v1/auth/me');
+            const userResponse = await api.get('/auth/me');
             setUser(userResponse.data as User);
             console.log('AuthProvider: User data set after login');
         } catch (error: any) {
@@ -85,11 +86,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const register = async (email: string, password: string, business_name?: string, tax_id?: string) => {
         try {
             console.log('AuthProvider: Registering...');
-            const response = await api.post<RegisterResponse>('/api/v1/auth/register', {
+            const response = await api.post<RegisterResponse>('/auth/register', {
                 email,
                 password,
+                full_name: `${business_name || 'User'}`, // Map to full_name as expected by backend
                 business_name,
-                tax_id
+                business_type: tax_id // Map tax_id to business_type for now
             });
             const { access_token } = response.data;
             console.log('AuthProvider: Registration successful, token received');
@@ -98,7 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
             // Fetch user details
-            const userResponse = await api.get('/api/v1/auth/me');
+            const userResponse = await api.get('/auth/me');
             setUser(userResponse.data as User);
             console.log('AuthProvider: User data set after registration');
         } catch (error: any) {
@@ -114,12 +116,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
     };
 
+    const updateUser = async () => {
+        try {
+            console.log('AuthProvider: Updating user data...');
+            const response = await api.get('/auth/me');
+            setUser(response.data as User);
+            console.log('AuthProvider: User data updated successfully');
+        } catch (error: any) {
+            console.error('AuthProvider: Failed to update user:', error);
+            if (error.response?.status === 401) {
+                console.log('AuthProvider: 401 error, clearing token');
+                localStorage.removeItem('token');
+                delete api.defaults.headers.common['Authorization'];
+                setUser(null);
+            }
+        }
+    };
+
     const value: AuthContextType = {
         user,
         isAuthenticated: !!user,
         login,
         register,
         logout,
+        updateUser,
         loading
     };
 

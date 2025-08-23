@@ -22,7 +22,7 @@ const Upload: React.FC = () => {
 
         setCancelling(true);
         try {
-            await api.post('/api/v1/transactions/cancel-processing');
+            await api.post('/transactions/cancel-processing');
             toast.success('Processing cancellation requested');
             setUploading(false);
             setUploadResult(null);
@@ -66,10 +66,10 @@ const Upload: React.FC = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            console.log(`[${uploadId}] Making API request to /api/v1/transactions/upload`);
+            console.log(`[${uploadId}] Making API request to /transactions/upload`);
             const startTime = Date.now();
 
-            const response = await api.post<UploadResult>('/api/v1/transactions/upload', formData, {
+            const response = await api.post<UploadResult>('/transactions/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -135,188 +135,133 @@ const Upload: React.FC = () => {
     });
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Upload Transactions</h1>
-                <p className="mt-1 text-base text-zinc-500 tracking-tight">
-                    Upload a CSV file or PDF bank statement with your transaction data for AI-powered classification
-                </p>
-            </div>
-
-            {/* Upload Area */}
-            <div className="bg-white/80 shadow rounded-lg p-6">
-                <div
-                    {...getRootProps()}
-                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${isDragActive
-                            ? 'border-brand-400 bg-brand-50'
-                            : 'border-sand-300 hover:border-brand-400 hover:bg-sand-50'
-                        }`}
-                >
-                    <input {...getInputProps()} />
-                    <CloudArrowUpIcon className="mx-auto h-12 w-12 text-brand-400" />
-                    <div className="mt-4">
-                        <p className="text-xl font-medium text-gray-900 tracking-tight">
-                            {isDragActive ? 'Drop the file here' : 'Drag and drop a CSV or PDF file here'}
-                        </p>
-                        <p className="mt-2 text-base text-zinc-500 tracking-tight">
-                            or click to browse files
-                        </p>
-                    </div>
-                    <p className="mt-4 text-sm text-zinc-400 tracking-tight">
-                        Supported formats: CSV files and PDF bank statements
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
+            <div className="space-y-6">
+                {/* Header */}
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Upload Statement</h1>
+                    <p className="mt-1 text-base text-zinc-500 tracking-tight">
+                        Upload your CSV or PDF bank statement for AI-powered transaction classification
                     </p>
                 </div>
-            </div>
 
-            {/* Upload Progress */}
-            {uploading && (
-                <div className="bg-white/80 shadow rounded-lg p-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-600 mr-3"></div>
-                            <p className="text-base font-medium text-gray-900 tracking-tight">
-                                Processing your transactions...
-                            </p>
-                        </div>
-                        <button
-                            onClick={handleCancelProcessing}
-                            disabled={cancelling}
-                            className="inline-flex items-center px-3 py-2 border border-coral-300 rounded-md shadow-sm text-base font-medium text-coral-700 bg-white hover:bg-coral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-tight"
-                        >
-                            <StopIcon className="h-4 w-4 mr-2" />
-                            {cancelling ? 'Stopping...' : 'Stop Processing'}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Upload Results */}
-            {uploadResult && (
-                <div className="bg-white/80 shadow rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4 tracking-tight">Upload Results</h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
-                            <div className="flex items-center">
-                                <CheckCircleIcon className="h-5 w-5 text-brand-600 mr-2" />
-                                <span className="text-base font-medium text-brand-900 tracking-tight">
-                                    Processed: {uploadResult.processed_count}
-                                </span>
+                {/* Upload Area */}
+                <div className="bg-white rounded-lg shadow p-8">
+                    {!uploading && !uploadResult && (
+                        <div className="text-center">
+                            <div className="mx-auto w-24 h-24 bg-brand-100 rounded-full flex items-center justify-center mb-6">
+                                <CloudArrowUpIcon className="h-12 w-12 text-brand-600" />
                             </div>
-                        </div>
-
-                        {uploadResult.errors.length > 0 && (
-                            <div className="bg-coral-50 border border-coral-200 rounded-lg p-4">
-                                <div className="flex items-center">
-                                    <ExclamationTriangleIcon className="h-5 w-5 text-coral-600 mr-2" />
-                                    <span className="text-base font-medium text-coral-900 tracking-tight">
-                                        Errors: {uploadResult.errors.length}
-                                    </span>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload your statement</h2>
+                            <p className="text-base text-gray-600 mb-6">
+                                Drag and drop your CSV or PDF file here, or click to browse
+                            </p>
+                            <div
+                                {...getRootProps()}
+                                className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-brand-400 transition-colors cursor-pointer"
+                            >
+                                <input {...getInputProps()} />
+                                <div className="text-center">
+                                    <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
+                                    <p className="mt-2 text-sm text-gray-600">
+                                        <span className="font-medium text-brand-600 hover:text-brand-500">
+                                            Click to upload
+                                        </span>{' '}
+                                        or drag and drop
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">CSV or PDF files only</p>
                                 </div>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Error Details */}
-                    {uploadResult.errors.length > 0 && (
-                        <div className="mb-6">
-                            <h4 className="text-base font-medium text-gray-900 mb-2 tracking-tight">Errors:</h4>
-                            <div className="bg-coral-50 border border-coral-200 rounded-lg p-4">
-                                <ul className="text-base text-coral-700 space-y-1 tracking-tight">
-                                    {uploadResult.errors.map((error, index) => (
-                                        <li key={index}>• {error}</li>
-                                    ))}
-                                </ul>
-                            </div>
                         </div>
                     )}
 
-                    {/* Sample Transactions */}
-                    {uploadResult.transactions.length > 0 && (
-                        <div>
-                            <h4 className="text-base font-medium text-gray-900 mb-2 tracking-tight">
-                                Sample Processed Transactions:
-                            </h4>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-sand-200">
-                                    <thead className="bg-sand-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Date
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Description
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Amount
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Classification
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-sand-200">
-                                        {uploadResult.transactions.slice(0, 5).map((transaction, index) => (
-                                            <tr key={index}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 tracking-tight">
-                                                    {transaction.date}
-                                                </td>
-                                                <td className="px-6 py-4 text-base text-gray-900 tracking-tight">
-                                                    {transaction.description}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 tracking-tight">
-                                                    ${transaction.amount}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span
-                                                        className={`inline-flex px-2 py-1 text-sm font-semibold rounded-full tracking-tight ${transaction.is_business_expense
-                                                                ? 'bg-brand-100 text-brand-800'
-                                                                : 'bg-sand-100 text-gray-800'
-                                                            }`}
-                                                    >
-                                                        {transaction.is_business_expense ? 'Business' : 'Personal'}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                    {uploading && (
+                        <div className="text-center">
+                            <div className="mx-auto w-24 h-24 bg-brand-100 rounded-full flex items-center justify-center mb-6">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+                            </div>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-2">Processing your statement</h2>
+                            <p className="text-base text-gray-600 mb-6">
+                                Our AI is analyzing and classifying your transactions. This may take a few moments.
+                            </p>
+                            <button
+                                onClick={handleCancelProcessing}
+                                disabled={cancelling}
+                                className="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                            >
+                                <StopIcon className="h-4 w-4 mr-2" />
+                                {cancelling ? 'Cancelling...' : 'Cancel Processing'}
+                            </button>
+                        </div>
+                    )}
+
+                    {uploadResult && (
+                        <div className="text-center">
+                            <div className="mx-auto w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                                <CheckCircleIcon className="h-12 w-12 text-green-600" />
+                            </div>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload successful!</h2>
+                            <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <p className="text-2xl font-bold text-brand-600">{uploadResult.processed_count}</p>
+                                        <p className="text-sm text-gray-600">Transactions processed</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-bold text-brand-600">
+                                            {uploadResult.transactions.filter(t => t.is_business_expense).length}
+                                        </p>
+                                        <p className="text-sm text-gray-600">Business transactions</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-bold text-brand-600">
+                                            {uploadResult.transactions.filter(t => !t.is_business_expense).length}
+                                        </p>
+                                        <p className="text-sm text-gray-600">Personal transactions</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <button
+                                    onClick={() => window.location.href = '/transactions'}
+                                    className="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
+                                >
+                                    View Transactions
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setUploadResult(null);
+                                        setUploading(false);
+                                    }}
+                                    className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
+                                >
+                                    Upload Another File
+                                </button>
                             </div>
                         </div>
                     )}
                 </div>
-            )}
 
-            {/* Instructions */}
-            <div className="bg-mint-50 border border-mint-200 rounded-lg p-6">
-                <h3 className="text-xl font-semibold text-brand-900 mb-4 tracking-tight">File Format Requirements</h3>
-                <div className="text-base text-brand-800 space-y-4 tracking-tight">
-                    <div>
-                        <h4 className="font-medium">CSV Files:</h4>
-                        <p>Your CSV file should contain the following columns:</p>
-                        <ul className="list-disc list-inside space-y-1 ml-4 mt-2">
-                            <li><strong>date</strong> - Transaction date (YYYY-MM-DD format)</li>
-                            <li><strong>description</strong> - Transaction description</li>
-                            <li><strong>amount</strong> - Transaction amount (positive for income, negative for expenses)</li>
-                            <li><strong>category</strong> - Optional category field</li>
-                        </ul>
-                        <p className="mt-2">
-                            <strong>Example:</strong><br />
-                            date,description,amount,category<br />
-                            2024-01-15,Client Payment,1500.00,Income<br />
-                            2024-01-16,Office Supplies,-45.50,Expenses
-                        </p>
-                    </div>
-                    
-                    <div>
-                        <h4 className="font-medium">PDF Bank Statements:</h4>
-                        <p>Upload your bank statement PDF and our AI will extract and classify the transactions automatically. The system works best with:</p>
-                        <ul className="list-disc list-inside space-y-1 ml-4 mt-2">
-                            <li>Standard bank statement formats</li>
-                            <li>Clear transaction descriptions</li>
-                            <li>Well-formatted dates and amounts</li>
-                        </ul>
+                {/* Instructions */}
+                <div className="bg-gray-50 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Supported Formats</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 className="font-medium text-gray-900 mb-2">CSV Files</h4>
+                            <ul className="text-sm text-gray-600 space-y-1">
+                                <li>• Export from your bank's online portal</li>
+                                <li>• Should include date, description, and amount columns</li>
+                                <li>• Common formats: QIF, OFX, or custom CSV</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-medium text-gray-900 mb-2">PDF Statements</h4>
+                            <ul className="text-sm text-gray-600 space-y-1">
+                                <li>• Monthly or quarterly bank statements</li>
+                                <li>• Our AI will extract transaction data</li>
+                                <li>• Supports most standard bank statement formats</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

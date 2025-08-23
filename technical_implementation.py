@@ -659,7 +659,7 @@ services:
     depends_on:
       - backend
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_API_URL=http://your-api-gateway-url.amazonaws.com
 
 volumes:
   postgres_data:

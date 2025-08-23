@@ -1,0 +1,9 @@
+{
+  "httpMethod": "GET",
+  "path": "/transactions/",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "queryStringParameters": null,
+  "body": null
+}

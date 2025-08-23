@@ -9,7 +9,7 @@ import time
 
 def test_cancellation_endpoint():
     """Test the cancellation endpoint"""
-    base_url = "http://localhost:8000"
+    base_url = "http://nv9zp49sye.execute-api.eu-west-2.amazonaws.com/prod"
     
     print("🔍 Testing Transaction Processing Cancellation")
     print("=" * 50)
@@ -17,7 +17,7 @@ def test_cancellation_endpoint():
     try:
         # Test cancellation endpoint (will fail without auth, but we can test it exists)
         print("🧪 Testing cancellation endpoint...")
-        response = requests.post(f"{base_url}/api/v1/transactions/cancel-processing")
+        response = requests.post(f"{base_url}/transactions/cancel-processing")
         
         if response.status_code == 401:
             print("✅ Cancellation endpoint exists (401 Unauthorized expected without auth)")
@@ -30,7 +30,7 @@ def test_cancellation_endpoint():
             print(f"Response: {response.text}")
             
     except requests.exceptions.ConnectionError:
-        print("❌ Could not connect to backend. Make sure it's running on localhost:8000")
+        print("❌ Could not connect to backend. Make sure it's running on nv9zp49sye.execute-api.eu-west-2.amazonaws.com/prod")
     except Exception as e:
         print(f"❌ Error: {str(e)}")
 

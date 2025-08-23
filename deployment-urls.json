@@ -1,0 +1,6 @@
+{
+  "api_url": "https://nv9zp49sye.execute-api.eu-west-2.amazonaws.com/prod/",
+  "frontend_url": "https://d1715o3ib7gp2x.cloudfront.net",
+  "stack_name": "parsea-stack",
+  "region": "eu-west-2"
+}

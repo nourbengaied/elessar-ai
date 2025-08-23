@@ -1,0 +1,9 @@
+{
+  "httpMethod": "POST",
+  "path": "/auth/login",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "queryStringParameters": null,
+  "body": "{\"email\": \"test@example.com\", \"password\": \"testpassword\"}"
+}
